@@ -14,6 +14,7 @@ Patch2:         15_bugfixes.dpatch
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}
 BuildRequires:  ocaml
 BuildRequires:  libgmp-devel
+BuildRequires:  ncurses-devel
 
 %description
 This package provides bindings for the GNU multiprecision library 
