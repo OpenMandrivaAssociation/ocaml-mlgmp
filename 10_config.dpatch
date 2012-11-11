@@ -1,0 +1,10 @@
+## 10_Makefile.dpatch by Mike Furr <mfurr@debian.org>
+## Disabling MPFR
+--- mlgmp-20021123.orig/config.h
++++ mlgmp-20021123/config.h
+@@ -1,5 +1,5 @@
+ #define SERIALIZE
+-#define USE_MPFR
++/*#define USE_MPFR*/
+ #define NDEBUG
+ #undef TRACE

@@ -1,0 +1,99 @@
+## 15_bugfixes.dpatch by Mike Furr <mfurr@debian.org>
+## Various bugfixes in C bindings
+diff -urNad --exclude=CVS --exclude=.svn ./gmp.ml /tmp/dpep-work.FYBj8e/mlgmp-20021123/gmp.ml
+--- ./gmp.ml	2002-11-23 08:13:53.000000000 -0500
++++ /tmp/dpep-work.FYBj8e/mlgmp-20021123/gmp.ml	2005-09-03 15:18:53.505890041 -0400
+@@ -66,7 +66,7 @@
+   external from_float: dest: t->float->unit = "_mlgmp_z2_from_float";;
+ 
+   external create: unit->t = "_mlgmp_z_create";;
+-  external copy: dest: t-> from: t-> unit = "_mlgmp_z_copy";;
++  external copy: dest: t-> from: t-> unit = "_mlgmp_z2_copy";;
+   external add: dest: t-> t->t->unit = "_mlgmp_z2_add";;
+   external sub: dest: t-> t->t->unit = "_mlgmp_z2_sub";;
+   external mul: dest: t-> t->t->unit = "_mlgmp_z2_mul";;
+@@ -85,6 +85,7 @@
+ 
+ module Z = struct
+   type t = Z2.t;;
++  external copy: t->t = "_mlgmp_z_copy";;
+   external of_int: int->t = "_mlgmp_z_from_int";;
+   external from_int: int->t = "_mlgmp_z_from_int";;
+   external from_string_base: base: int->string->t="_mlgmp_z_from_string_base";;
+diff -urNad --exclude=CVS --exclude=.svn ./gmp.mli /tmp/dpep-work.FYBj8e/mlgmp-20021123/gmp.mli
+--- ./gmp.mli	2002-11-23 08:13:54.000000000 -0500
++++ /tmp/dpep-work.FYBj8e/mlgmp-20021123/gmp.mli	2005-09-03 15:18:53.505890041 -0400
+@@ -14,7 +14,7 @@
+       = "_mlgmp_z2_from_string_base"
+     external from_float : dest:t -> float -> unit = "_mlgmp_z2_from_float"
+     external create : unit -> t = "_mlgmp_z_create"
+-    external copy : dest:t -> from:t -> unit = "_mlgmp_z_copy"
++    external copy : dest:t -> from:t -> unit = "_mlgmp_z2_copy"
+     external add : dest:t -> t -> t -> unit = "_mlgmp_z2_add"
+     external sub : dest:t -> t -> t -> unit = "_mlgmp_z2_sub"
+     external mul : dest:t -> t -> t -> unit = "_mlgmp_z2_mul"
+@@ -31,6 +31,7 @@
+ module Z :
+   sig
+     type t = Z2.t
++    external copy : t -> t = "_mlgmp_z_copy"
+     external from_int : int -> t = "_mlgmp_z_from_int"
+     external of_int : int -> t = "_mlgmp_z_from_int"
+     external from_string_base : base:int -> string -> t
+diff -urNad --exclude=CVS --exclude=.svn ./mlgmp_z.c /tmp/dpep-work.FYBj8e/mlgmp-20021123/mlgmp_z.c
+--- ./mlgmp_z.c	2002-11-23 12:47:20.000000000 -0500
++++ /tmp/dpep-work.FYBj8e/mlgmp-20021123/mlgmp_z.c	2005-09-03 15:18:53.506889909 -0400
+@@ -58,6 +58,13 @@
+   CAMLreturn(r);
+ }
+ 
++value _mlgmp_z2_copy(value dest, value from)
++{
++  CAMLparam2(dest, from);
++  mpz_set(*mpz_val(dest), *mpz_val(from));
++  CAMLreturn(Val_unit);
++}
++
+ value _mlgmp_z_from_int(value ml_val)
+ {
+   CAMLparam1(ml_val);
+@@ -88,21 +95,21 @@
+ value _mlgmp_z2_from_int(value r, value ml_val)
+ {
+   CAMLparam2(r, ml_val);
+-  mpz_init_set_si(*mpz_val(r), Int_val(ml_val));
++  mpz_set_si(*mpz_val(r), Int_val(ml_val));
+   CAMLreturn(Val_unit);
+ }
+ 
+ value _mlgmp_z2_from_string_base(value r, value base, value ml_val)
+ {
+   CAMLparam3(r, base, ml_val);
+-  mpz_init_set_str(*mpz_val(r), String_val(ml_val), Int_val(base));
++  mpz_set_str(*mpz_val(r), String_val(ml_val), Int_val(base));
+   CAMLreturn(Val_unit);
+ }
+ 
+ value _mlgmp_z2_from_float(value r, value ml_val)
+ {
+   CAMLparam2(r, ml_val);
+-  mpz_init_set_d(*mpz_val(r), Double_val(ml_val));
++  mpz_set_d(*mpz_val(r), Double_val(ml_val));
+   CAMLreturn(Val_unit);
+ }
+ 
+diff -urNad --exclude=CVS --exclude=.svn ./test_suite.ml /tmp/dpep-work.FYBj8e/mlgmp-20021123/test_suite.ml
+--- ./test_suite.ml	2002-11-21 07:26:37.000000000 -0500
++++ /tmp/dpep-work.FYBj8e/mlgmp-20021123/test_suite.ml	2005-09-03 15:18:53.506889909 -0400
+@@ -1,5 +1,11 @@
+ open Gmp;;
+ 
++assert ((Z.from_int 578) = (let r = Z2.create () in Z2.copy r (Z.from_int 578); r));
++assert ((Z.from_int 578) = (let r = Z2.create () in Z2.from_int r 578; r));
++assert ((Z.from_int 578) = (let r = Z2.create () in Z2.from_string_base r 10 "578"; r));
++(*to be used only with corrected sources *)
++(*assert ((Z.from_int 578) = (Z.copy (Z.from_int 578)));*)
++assert ((Z.from_int 578) = (let r = Z2.create () in Z2.from_float r 578.; r));
+ assert ((Z.from_int 578) = (Z.from_string_base ~base: 10 "578"));
+ assert ((Z.from_int 578) = (Z.from_float 578.));
+ assert ((Z.to_string_base ~base: 10 (Z.from_int 578)) = "578");

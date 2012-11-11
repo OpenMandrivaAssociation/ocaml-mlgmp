@@ -1,0 +1,87 @@
+--- mlgmp/Makefile.orig	2010-05-15 02:19:20.000000000 +0200
++++ mlgmp/Makefile	2010-05-15 02:36:39.000000000 +0200
+@@ -2,12 +2,12 @@
+ RANLIB= ranlib
+ 
+ OCAML_LIBDIR:= $(shell ocamlc -where)
+-GMP_INCLUDES= -I/opt/gmp/include -I/users/absint2/local/include -I$(HOME)/packages/gmp/include
++GMP_INCLUDES=
+ 
+-GMP_LIBDIR=/opt/gmp/lib
++GMP_LIBDIR=/usr/lib
+ DESTDIR= $(OCAML_LIBDIR)/gmp
+ 
+-RLIBFLAGS= -cclib "-Wl,-rpath $(GMP_LIBDIR)" # Linux, FreeBSD
++#RLIBFLAGS= -cclib "-Wl,-rpath $(GMP_LIBDIR)" # Linux, FreeBSD
+ #RLIBFLAGS= -cclib "-Wl,-R $(GMP_LIBDIR)" # Solaris
+ # RLIBFLAGS= # MacOS X
+ 
+@@ -15,13 +15,14 @@
+ 	-cclib -lmpfr -cclib -lgmp -cclib -L$(DESTDIR)
+ 
+ CC= gcc
+-CFLAGS_MISC= -Wall -Wno-unused -g -O3
++CFLAGS_MISC= -Wall -Wno-unused -g -O2 -fPIC
+ #CFLAGS_MISC=
+ CFLAGS_INCLUDE= -I $(OCAML_LIBDIR) $(GMP_INCLUDES)
+ CFLAGS= $(CFLAGS_MISC) $(CFLAGS_INCLUDE)
+ 
+ OCAMLC= ocamlc -g
+ OCAMLOPT= ocamlopt
++OCAMLMKLIB= ocamlmklib
+ OCAMLFLAGS=
+ 
+ CMODULES= mlgmp_z.c mlgmp_q.c mlgmp_f.c mlgmp_fr.c mlgmp_random.c mlgmp_misc.c
+@@ -33,6 +34,16 @@
+ 	test_suite test_suite.opt
+ TESTS= test_suite test_suite.opt
+ 
++C_STATIC = libgmpstub.a
++C_SHARED = dllgmpstub.so
++BYTE_LIBS = gmp.cma gmp.cmi
++BYTE_TESTS = test_suite
++OPT_LIBS = gmp.cmxa
++OPT_CMX = gmp.cmx
++OPT_TESTS = test_suite.opt
++
++LIBS = $(C_SHARED) $(BYTE_LIBS) $(OPT_LIBS)
++
+ all:	$(LIBS) tests
+ 
+ install: all
+@@ -63,15 +74,9 @@
+ 
+ $(CMODULES_O): conversions.c config.h
+ 
+-libmlgmp.a: $(CMODULES_O)
+-	$(AR) -rc $@ $+
+-	$(RANLIB) $@
+-
+-gmp.cma: gmp.cmo libmlgmp.a
+-	$(OCAMLC) $(OCAMLFLAGS) -a gmp.cmo -cclib -lmlgmp $(LIBFLAGS) -o $@
+-
+-gmp.a gmp.cmxa: gmp.cmx libmlgmp.a
+-	$(OCAMLOPT) $(OCAMLFLAGS) -a gmp.cmx -cclib -lmlgmp  $(LIBFLAGS) -o $@
++dllgmpstub.so libgmpstub.a gmp.cma gmp.cmxa: gmp.cmo $(OPT_CMX) $(CMODULES_O)
++	$(OCAMLMKLIB) $(OCAMLFLAGS) -o gmp -oc gmpstub  gmp.cmo \
++	   $(OPT_CMX) $(CMODULES_O) -lgmp
+ 
+ pretty_gmp.cmo: pretty_gmp.cmi gmp.cmo
+ 
+@@ -91,13 +96,13 @@
+ 	$(OCAMLOPT) $+ -o $@
+ 
+ test_suite:	gmp.cma test_suite.cmo
+-	$(OCAMLC) -custom $+ -o $@
++	$(OCAMLC) -custom $+ -o $@ -cclib -L.
+ 
+ test_suite.opt:	gmp.cmxa test_suite.cmx
+-	$(OCAMLOPT) $+ -o $@
++	$(OCAMLOPT) $+ -o $@ -cclib -L.
+ 
+ clean:
+-	rm -f *.o *.cm* $(PROGRAMS) *.a
++	rm -f *.o *.cm* $(PROGRAMS) *.a *.so
+ 
+ depend:
+ 	ocamldep *.ml *.mli > depend
