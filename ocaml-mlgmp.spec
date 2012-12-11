@@ -1,6 +1,6 @@
 Name:           ocaml-mlgmp
 Version:        0.13
-Release:        %mkrel 1
+Release:        2
 Summary:        OCaml bindings for the GNU multiprecision arithmetic library
 License:        LGPL + linking exception
 Group:          Development/Other
@@ -11,9 +11,8 @@ Patch0:         10_config.dpatch
 #Patch1:         11_Makefile.dpatch
 Patch1:         Makefile.patch
 Patch2:         15_bugfixes.dpatch
-BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}
 BuildRequires:  ocaml
-BuildRequires:  libgmp-devel
+BuildRequires:  gmp-devel
 BuildRequires:  ncurses-devel
 
 %description
@@ -44,16 +43,12 @@ mkdir html
 ocamldoc -colorize-code -html gmp.mli -d html
 
 %install
-rm -rf %{buildroot}
 install -d %{buildroot}/`ocamlc -where`/gmp/
 install -m 0644 -c gmp.{cmi,mli,cma,cmxa} *.a \
            %{buildroot}/`ocamlc -where`/gmp/
 install -d %{buildroot}/`ocamlc -where`/stublibs
 install -m 0755 -c *.so %{buildroot}/`ocamlc -where`/stublibs
 install -m 0644 META %{buildroot}/`ocamlc -where`/gmp/
-
-%clean
-rm -rf %{buildroot}
 
 %files
 %defattr(-,root,root)
@@ -70,3 +65,11 @@ rm -rf %{buildroot}
 %{_libdir}/ocaml/gmp/*.a
 %{_libdir}/ocaml/gmp/*.cmxa
 %{_libdir}/ocaml/gmp/*.mli
+
+
+%changelog
+* Fri Aug 20 2010 Florent Monnier <blue_prawn@mandriva.org> 0.13-1mdv2011.0
++ Revision: 571523
+- BuildRequires: ncurses-devel
+- import ocaml-mlgmp
+
