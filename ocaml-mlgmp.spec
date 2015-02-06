@@ -1,6 +1,6 @@
 Name:           ocaml-mlgmp
 Version:        0.13
-Release:        2
+Release:        3
 Summary:        OCaml bindings for the GNU multiprecision arithmetic library
 License:        LGPL + linking exception
 Group:          Development/Other
