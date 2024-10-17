@@ -4,7 +4,7 @@ Release:        3
 Summary:        OCaml bindings for the GNU multiprecision arithmetic library
 License:        LGPL + linking exception
 Group:          Development/Other
-URL:            http://www-verimag.imag.fr/~monniaux/programmes.html.en
+URL:            https://www-verimag.imag.fr/~monniaux/programmes.html.en
 Source0:        http://www-verimag.imag.fr/~monniaux/download/mlgmp.tar.gz
 Source1:        META.in
 Patch0:         10_config.dpatch
