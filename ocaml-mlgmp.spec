@@ -11,6 +11,7 @@ Patch0:         10_config.dpatch
 #Patch1:         11_Makefile.dpatch
 Patch1:         Makefile.patch
 Patch2:         15_bugfixes.dpatch
+BuildRequires:	make
 BuildRequires:  ocaml
 BuildRequires:  gmp-devel
 BuildRequires:  ncurses-devel
